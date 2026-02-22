@@ -1,6 +1,6 @@
 package com.epam.training.hangman.interfaces;
 
-import com.epam.training.hangman.utils.State;
+import com.epam.training.hangman.State;
 import java.util.List;
 
 public interface Hangman {

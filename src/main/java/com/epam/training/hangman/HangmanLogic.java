@@ -3,7 +3,6 @@ package com.epam.training.hangman;
 import com.epam.training.hangman.interfaces.Hangman;
 import com.epam.training.hangman.utils.Common;
 import com.epam.training.hangman.utils.InMemoryDatabase;
-import com.epam.training.hangman.utils.State;
 
 import java.util.ArrayList;
 import java.util.HashSet;
