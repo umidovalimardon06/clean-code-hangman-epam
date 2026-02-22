@@ -1,89 +1,121 @@
 package com.epam.training.hangman;
 
+import com.epam.training.hangman.interfaces.Hangman;
+import com.epam.training.hangman.utils.Common;
+import com.epam.training.hangman.utils.InMemoryDatabase;
+import com.epam.training.hangman.utils.State;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class HangmanLogic {
-    public String word;
-    public List<Character> lettersTried;
+public class HangmanLogic implements Hangman {
+    public String guessedWord;
+    public Set<Character> lettersTried;
     public int wrongGuessCount;
+    public static State state;
 
-    public String state;
-    public HangmanLogic(String w) {
-        if (w == null) throw new RuntimeException("Error: an error occurred");
-        char[] abc = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
-        int b = 0;
-        for (int c = 0; c < w.length(); c++) {
-            for (int a = 0; a < 26; a++) {
-                if (abc[a] == w.charAt(c)) b = b + 1;
-            }
-        }
-        if (w.equals("") || b < w.length()) throw new IllegalArgumentException("Error: an error occurred");
+    public HangmanLogic(String guessedWord) {
+        if (Common.isNull(guessedWord)) throw new IllegalArgumentException("Guessed word can't be null");
+        if (!isGuessedWordEnglishWord(
+                guessedWord.toCharArray(),
+                InMemoryDatabase.getAllowedChars())
+        ) throw new IllegalArgumentException("Guessed word contains non English character");
 
-        this.word = w;
-        lettersTried = new ArrayList<>();
+        this.guessedWord = guessedWord;
+        lettersTried = new HashSet<>();
         wrongGuessCount = 0;
     }
 
+    @Override
     public void guess(char c) {
-        // valid?
-        char[] abc = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
-        boolean v = false;
-        for (int a = 0; a < 26; a++) {
-            if (abc[a] == c) v = true;
-        }
-        if (!v || lettersTried.contains(c)) {
-            throw new IllegalArgumentException("Error: an error occurred");
-        }
+        char lowerCase = Character.toLowerCase(c);
 
-        // logic
-        lettersTried.add(c);
-        if (word.contains(String.valueOf(c))) {
-            int a = 0;
-            for (int y = 0; y < word.length(); y++) {
-                for (int x = 0; x < lettersTried.size(); x++)
-                    if (!(lettersTried.get(x) != word.charAt(y))) {
-                        a = a + 1;
-                    }
+        if (!isEnglishCharacter(lowerCase))
+            throw new IllegalArgumentException("Given char is not exist in English character set");
+
+        boolean isNewGuess = lettersTried.add(lowerCase);
+        if (!isNewGuess) return;
+
+
+        if (isRightChar(lowerCase)) {
+            boolean allRevealed = true;
+            for (char wc : guessedWord.toCharArray()) {
+                if (!lettersTried.contains(wc)) {
+                    allRevealed = false;
+                    break;
+                }
             }
-            if (a == word.length()) {state = "Won";}
-            else {state = "In progress";}
+            state = allRevealed ? State.WON : State.IN_PROGRESS;
         } else {
             wrongGuessCount++;
             if (wrongGuessCount >= 7) {
-                state = "Lost";
-            } else {
-                state = "In progress";
-            }
+                state = State.LOST;
+            } else state = State.IN_PROGRESS;
         }
     }
 
+    @Override
     public String getDisplayedWord() {
-        if(state == "Lost"){
-            return word;
-        }
-        String dw = "";
-        for (int q = 0; q < word.length(); q++) {
-            if (lettersTried.contains(word.charAt(q))) {
-                dw = dw + word.charAt(q);
-            } else {
-                dw = dw + '_';
-            }
-        }
-        return dw;
+        if (state == State.LOST) return guessedWord;
+        return constructWordToDisplay();
     }
 
+    @Override
     public State getState() {
-        if (state == "Won") return State.WON;
-        else if (state == "Lost") return State.LOST;
+        if (state == State.WON) return State.WON;
+        else if (state == State.LOST) return State.LOST;
         else return State.IN_PROGRESS;
     }
 
+    @Override
     public List<Character> getLettersTried() {
-        return lettersTried;
+        return new ArrayList<>(lettersTried);
     }
 
+    @Override
     public int getWrongGuessesLeft() {
         return 7 - wrongGuessCount;
     }
+
+
+    public static boolean isGuessedWordEnglishWord(char[] input, char[] charsAllowed) {
+        Set<Character> allowedSet = new HashSet<>();
+        for (char c : charsAllowed)
+            allowedSet.add(c);
+
+        for (char c : input)
+            if (!allowedSet.contains(c)) return false;
+
+        return true;
+    }
+
+    public static boolean isEnglishCharacter(char input) {
+        Set<Character> allowedSet = new HashSet<>();
+        char[] allowedChars = InMemoryDatabase.getAllowedChars();
+        for (char c : allowedChars)
+            allowedSet.add(c);
+
+        if (allowedSet.contains(input)) return true;
+
+        return false;
+    }
+
+
+    private boolean isRightChar(char c) {
+        return guessedWord.contains(String.valueOf(c));
+    }
+
+    private String constructWordToDisplay() {
+        String wordToDisplay = "";
+        for (int i = 0; i < guessedWord.length(); i++) {
+            if (lettersTried.contains(guessedWord.charAt(i)))
+                wordToDisplay += guessedWord.charAt(i);
+            else wordToDisplay = wordToDisplay + '_';
+        }
+        return wordToDisplay;
+    }
+
+
 }

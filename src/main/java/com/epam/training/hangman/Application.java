@@ -1,40 +1,39 @@
 package com.epam.training.hangman;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import com.epam.training.hangman.interfaces.Hangman;
+import com.epam.training.hangman.utils.Common;
+import com.epam.training.hangman.utils.InMemoryDatabase;
+import com.epam.training.hangman.utils.State;
 
-public class Application extends Object {
+import java.util.List;
+
+public class Application {
     public String word;
     public List<Character> lettersTried;
     public int wrongGuessCount;
 
     public static void main(String[] args) {
-        // Init
-        // Warning: don't close this Scanner, that would close System.in as well,
-        // making it inaccessible throughout the rest of the program.
-        Scanner scnr = new Scanner(System.in, StandardCharsets.UTF_8);
-        Random r = new Random();
-        String[] db = {"hangman", "apple", "bee", "clean", "computer", "office", "recursion"};
-        String w = db[r.nextInt(db.length)];
-        HangmanLogic l = new HangmanLogic(w);
-        System.out.println("Welcome to the Hangman game!");
-        System.out.println();
+        String[] reservedLetters = InMemoryDatabase.getLetters();
+        int randomIndexBasedOnLettersArrayLength = Common.RANDOM.nextInt(reservedLetters.length);
+        String guessedWord = reservedLetters[randomIndexBasedOnLettersArrayLength];
 
-        // main cycle
+        Hangman hangmanGame = new HangmanLogic(guessedWord);
+        System.out.println("Welcome to the Hangman game!");
+        Common.line();
+
         String s;
         do {
-            System.out.println("The word: " + l.getDisplayedWord());
-            System.out.println("Letters tried: " + l.lettersTried);
-            System.out.println("Wrong guesses until game over: " + (7 - l.wrongGuessCount));
-            // inner cycle
+            System.out.println("The word: " + hangmanGame.getDisplayedWord());
+            System.out.println("Letters tried: " + hangmanGame.getLettersTried());
+            System.out.println("Wrong guesses until game over: " + hangmanGame.getWrongGuessesLeft());
+
             while (true) {
                 String in = "";
                 boolean stay = true;
                 while (stay) {
                     System.out.print("Enter your guess: ");
-                    in = scnr.next();
+                    in = Common.SC.next();
+
                     System.out.println();
                     if (in.length() == 1) stay = false;
                     else {
@@ -44,22 +43,22 @@ public class Application extends Object {
                 }
                 try {
                     // guessing
-                    l.guess(in.charAt(0));
+                    hangmanGame.guess(in.charAt(0));
                     break;
                 } catch(Exception e) {
                     System.out.println(e.getMessage());
                     System.out.println();
                 }
             }
-        } while (l.state == "In progress");
+        } while (hangmanGame.getState() == State.IN_PROGRESS);
 
         // end
-        if (l.state == "Won") {
+        if (hangmanGame.getState() == State.WON) {
             System.out.println("Congratulations, you won!");
-            System.out.println("The word was: " + w);
+            System.out.println("The word was: " + guessedWord);
         } else {
             System.out.println("You have no more tries left, you lost the game");
-            System.out.println("The word was: " + w);
+            System.out.println("The word was: " + guessedWord);
         }
     }
 
