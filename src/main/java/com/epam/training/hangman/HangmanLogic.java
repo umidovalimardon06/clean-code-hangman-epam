@@ -12,9 +12,9 @@ import java.util.Set;
 
 public class HangmanLogic implements Hangman {
     public String guessedWord;
-    public Set<Character> lettersTried;
+    public List<Character> lettersTried;
     public int wrongGuessCount;
-    public static State state;
+    public State state;
 
     public HangmanLogic(String guessedWord) {
         if (Common.isNull(guessedWord)) throw new IllegalArgumentException("Guessed word can't be null");
@@ -24,8 +24,9 @@ public class HangmanLogic implements Hangman {
         ) throw new IllegalArgumentException("Guessed word contains non English character");
 
         this.guessedWord = guessedWord;
-        lettersTried = new HashSet<>();
+        lettersTried = new ArrayList<>();
         wrongGuessCount = 0;
+        state = State.IN_PROGRESS;
     }
 
     @Override
@@ -35,9 +36,10 @@ public class HangmanLogic implements Hangman {
         if (!isEnglishCharacter(lowerCase))
             throw new IllegalArgumentException("Given char is not exist in English character set");
 
-        boolean isNewGuess = lettersTried.add(lowerCase);
-        if (!isNewGuess) return;
+        if (lettersTried.contains(lowerCase))
+            throw new IllegalArgumentException("Character '" + lowerCase + "' has already been guessed");
 
+        lettersTried.add(lowerCase);
 
         if (isRightChar(lowerCase)) {
             boolean allRevealed = true;
@@ -52,21 +54,21 @@ public class HangmanLogic implements Hangman {
             wrongGuessCount++;
             if (wrongGuessCount >= 7) {
                 state = State.LOST;
-            } else state = State.IN_PROGRESS;
+            } else {
+                state = State.IN_PROGRESS;
+            }
         }
     }
 
     @Override
     public String getDisplayedWord() {
-        if (state == State.LOST) return guessedWord;
+        if (state == State.LOST || state == State.WON) return guessedWord;
         return constructWordToDisplay();
     }
 
     @Override
     public State getState() {
-        if (state == State.WON) return State.WON;
-        else if (state == State.LOST) return State.LOST;
-        else return State.IN_PROGRESS;
+        return state;
     }
 
     @Override
@@ -78,7 +80,6 @@ public class HangmanLogic implements Hangman {
     public int getWrongGuessesLeft() {
         return 7 - wrongGuessCount;
     }
-
 
     public static boolean isGuessedWordEnglishWord(char[] input, char[] charsAllowed) {
         Set<Character> allowedSet = new HashSet<>();
@@ -92,30 +93,24 @@ public class HangmanLogic implements Hangman {
     }
 
     public static boolean isEnglishCharacter(char input) {
-        Set<Character> allowedSet = new HashSet<>();
         char[] allowedChars = InMemoryDatabase.getAllowedChars();
         for (char c : allowedChars)
-            allowedSet.add(c);
-
-        if (allowedSet.contains(input)) return true;
-
+            if (c == input) return true;
         return false;
     }
-
 
     private boolean isRightChar(char c) {
         return guessedWord.contains(String.valueOf(c));
     }
 
     private String constructWordToDisplay() {
-        String wordToDisplay = "";
+        StringBuilder wordToDisplay = new StringBuilder();
         for (int i = 0; i < guessedWord.length(); i++) {
             if (lettersTried.contains(guessedWord.charAt(i)))
-                wordToDisplay += guessedWord.charAt(i);
-            else wordToDisplay = wordToDisplay + '_';
+                wordToDisplay.append(guessedWord.charAt(i));
+            else
+                wordToDisplay.append('_');
         }
-        return wordToDisplay;
+        return wordToDisplay.toString();
     }
-
-
 }
