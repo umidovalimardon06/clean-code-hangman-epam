@@ -14,7 +14,7 @@ public class HangmanLogic implements Hangman {
     public String guessedWord;
     public List<Character> lettersTried;
     public int wrongGuessCount;
-    public State state;
+    public String state;
 
     public HangmanLogic(String guessedWord) {
         if (Common.isNull(guessedWord)) throw new IllegalArgumentException("Guessed word can't be null");
@@ -26,7 +26,7 @@ public class HangmanLogic implements Hangman {
         this.guessedWord = guessedWord;
         lettersTried = new ArrayList<>();
         wrongGuessCount = 0;
-        state = State.IN_PROGRESS;
+        state = "IN_PROGRESS";
     }
 
     @Override
@@ -49,26 +49,26 @@ public class HangmanLogic implements Hangman {
                     break;
                 }
             }
-            state = allRevealed ? State.WON : State.IN_PROGRESS;
+            state = allRevealed ? "WON" : "IN_PROGRESS";
         } else {
             wrongGuessCount++;
             if (wrongGuessCount >= 7) {
-                state = State.LOST;
+                state = "LOST";
             } else {
-                state = State.IN_PROGRESS;
+                state = "IN_PROGRESS";
             }
         }
     }
 
     @Override
     public String getDisplayedWord() {
-        if (state == State.LOST || state == State.WON) return guessedWord;
+        if (state.equals("LOST") || state.equals("WON")) return guessedWord;
         return constructWordToDisplay();
     }
 
     @Override
     public State getState() {
-        return state;
+        return State.valueOf(state);
     }
 
     @Override
