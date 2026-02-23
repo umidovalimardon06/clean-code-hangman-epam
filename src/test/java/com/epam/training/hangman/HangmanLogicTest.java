@@ -1,5 +1,7 @@
 package com.epam.training.hangman;
 
+import com.epam.training.hangman.service.HangmanLogic;
+import com.epam.training.hangman.states.State;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

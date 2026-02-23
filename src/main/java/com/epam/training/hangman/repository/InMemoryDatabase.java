@@ -1,4 +1,4 @@
-package com.epam.training.hangman.utils;
+package com.epam.training.hangman.repository;
 
 public class InMemoryDatabase {
     public static String[] getLetters() {
